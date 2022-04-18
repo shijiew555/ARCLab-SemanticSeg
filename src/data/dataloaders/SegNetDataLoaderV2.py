@@ -42,7 +42,7 @@ class SegNetDataset(Dataset):
         # General Parameters
         self.root_dir = root_dir
         self.img_dir = os.path.join(root_dir, 'images')
-        self.gt_dir = os.path.join(root_dir, 'groundtruth')
+        # self.gt_dir = os.path.join(root_dir, 'groundtruth')
         self.image_list = np.array([f for f in os.listdir(self.img_dir) if (f.endswith(".png") or f.endswith(".jpg"))])
         self.crop_size = crop_size
         self.sample = sample
@@ -59,7 +59,8 @@ class SegNetDataset(Dataset):
         self.rotate = rotate
         self.brightness = brightness
         self.contrast = contrast
-        self.img_path, self.gt_path, self.label_path = [],[],[]
+        self.img_path, self.label_path = [], []
+        # self.img_path, self.gt_path, self.label_path = [],[],[]
         self.transform = transform
 
         if json_path:
@@ -71,7 +72,8 @@ class SegNetDataset(Dataset):
         Load Dataset into Memory
         '''
 
-        self.images, self.gt_images, self.labels = [], [], []
+        #self.images, self.gt_images, self.labels = [], [], []
+        self.images, self.labels = [], []
 
         data_loading = tqdm(enumerate(self.image_list), total=len(self.image_list))
 
@@ -82,16 +84,16 @@ class SegNetDataset(Dataset):
             #if self.dataset == "synapse":
             #    gt_file_name = self.image_list[idx][0:-4] + ".png"
             #elif self.dataset == "cholec":
-            gt_file_name = self.image_list[idx][0:-4] + "_color_mask.png"
+            # gt_file_name = self.image_list[idx][0:-4] + "_color_mask.png"
             #elif self.dataset == "miccai":
             #    gt_file_name = self.image_list[idx][0:-4] + "_gt.png"
             #else:
             #    raise ValueError("Ground Truth File Name Does Not Exist")
 
-            gt_name = os.path.join(self.gt_dir, gt_file_name)
+            # gt_name = os.path.join(self.gt_dir, gt_file_name)
 
             self.img_path.append(img_name)
-            self.gt_path.append(gt_name)
+            # self.gt_path.append(gt_name)
 
             # image = Image.open(img_name)
             # image = image.convert("RGB")
@@ -185,7 +187,8 @@ class SegNetDataset(Dataset):
     def __getitem__(self, idx):
         open_time = time.time()
         #image, gt, label = self.images[idx], self.gt_images[idx], self.labels[idx]
-        img_name,gt_name = self.img_path[idx],self.gt_path[idx]
+        img_name = self.img_path[idx]
+        img_name = self.img_path[idx]
         #print(len(img_name))
         #print(len(gt_name))
         # if True:
@@ -193,8 +196,8 @@ class SegNetDataset(Dataset):
         image = Image.open(img_name)
         image = image.convert("RGB")
 
-        gt_image = Image.open(gt_name)
-        gt_image = gt_image.convert("RGB")
+        #gt_image = Image.open(gt_name)
+        #gt_image = gt_image.convert("RGB")
 
         #print("open time: ",time.time()-open_time)
         #to_tensor = ToTensor()
@@ -207,7 +210,7 @@ class SegNetDataset(Dataset):
             #gt = TF.resize(gt_image, [480, 854])#, interpolation=Image.NEAREST)
             trans_time = time.time()
             image = self.transform(image)
-            gt = self.transform(gt_image)
+            #gt = self.transform(gt_image)
             #print("trans time: ",time.time()-trans_time)
             time_after_trans = time.time()
             # print("-------####------")
@@ -238,8 +241,8 @@ class SegNetDataset(Dataset):
             #         self.labels.append(catMask)
             #         self.gt_images.append(gt)
             # else:
-            gt_label = gt.permute(1, 2, 0)
-            gt_label = (gt_label * 255).long()
+             gt_label = gt.permute(1, 2, 0)
+             gt_label = (gt_label * 255).long()
             catMask = torch.zeros((gt_label.shape[0], gt_label.shape[1]))
             #print(type(catMask))
             
@@ -263,12 +266,12 @@ class SegNetDataset(Dataset):
             # NOTE: Typically set to "False" unless you want to validate your network on Full-Resolution Images
             if self.full_res_validation == "True": # when set to "True", you will validate on HD Full-Resolution Images (be aware of decreasing Batch Size to 3 or 1 so it can fit in RAM)
                 image = self.transform(image)
-                gt = self.transform(gt_image)
+                # gt = self.transform(gt_image)
                 # image = TF.resize(image, [480, 854], interpolation=Image.BILINEAR)
                 # gt = TF.resize(gt_image, [480, 854], interpolation=Image.NEAREST)
             else:
                 image = TF.resize(image, [self.resizedHeight, self.resizedWidth], interpolation=Image.BILINEAR)
-                gt = TF.resize(gt_image, [self.resizedHeight, self.resizedWidth], interpolation=Image.NEAREST)
+                # gt = TF.resize(gt_image, [self.resizedHeight, self.resizedWidth], interpolation=Image.NEAREST)
                 #image = TF.resize(image, [self.resizedHeight, self.resizedWidth], interpolation=Image.BILINEAR)
                 #gt = TF.resize(gt_image, [self.resizedHeight, self.resizedWidth], interpolation=Image.NEAREST)
 
@@ -322,11 +325,11 @@ class SegNetDataset(Dataset):
         if self.sample == "test":
             label = label.squeeze()
         
-        gt = gt * 255
+        # gt = gt * 255
         #print(image.shape)
         #print(gt.shape)
 
-        return image.type(torch.float32), gt.type(torch.int64), label.type(torch.int64)
+        return image.type(torch.float32), label.type(torch.int64)
     
     def generateKey(self, key):
         '''
